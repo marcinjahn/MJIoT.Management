@@ -12,6 +12,11 @@ namespace MJIoT_Management
     {
         static void Main(string[] args)
         {
+            var manager = new Manager();
+
+            manager.CreateDeviceAsync("Simulated Switch Nr 2", 3);
+
+            Console.ReadLine();
         }
 
 
@@ -135,7 +140,7 @@ namespace MJIoT_Management
         }
 
         ////EQUIPMENT PROPERTY
-        public void CreateDeviceProperty( int deviceTypeId, string propertyName, PropertyTypeFormats propertyType)
+        public void CreatePropertyType( int deviceTypeId, string propertyName, PropertyTypeFormats propertyType, bool uiConfigurable)
         {
             using (var context = new MJIoTDBContext())
             {
@@ -151,7 +156,8 @@ namespace MJIoT_Management
                 {
                     DeviceType = type,
                     Name = propertyName,
-                    Format = propertyType
+                    Format = propertyType,
+                    UIConfigurable = uiConfigurable
                 };
 
                 //SAVE PROEPRTY
@@ -160,7 +166,7 @@ namespace MJIoT_Management
             }
         }
 
-        public void UpdateEquipmentProperty(int id, int deviceTypeId, string propertyName, PropertyTypeFormats propertyType)
+        public void UpdatePropertyType(int id, int deviceTypeId, string propertyName, PropertyTypeFormats propertyType, bool uiConfigurable)
         {
             using (var context = new MJIoTDBContext())
             {
@@ -179,13 +185,14 @@ namespace MJIoT_Management
                 property.DeviceType = type;
                 property.Name = propertyName;
                 property.Format = propertyType;
+                property.UIConfigurable = uiConfigurable;
 
                 //SAVE PROEPRTY
                 context.SaveChanges();
             }
         }
 
-        public void RemoveEquipmentProperty(int id)
+        public void RemovePropertyType(int id)
         {
             using (var context = new MJIoTDBContext())
             {
@@ -196,6 +203,33 @@ namespace MJIoT_Management
                 }
 
                 context.PropertyTypes.Remove(property);
+                context.SaveChanges();
+            }
+        }
+
+        public void CreateDeviceProperty(int propertyTypeId, int deviceId, string value)
+        {
+            var property = new DeviceProperty();
+
+            using (var context = new MJIoTDBContext())
+            {
+                var propertyType = context.PropertyTypes.Where(n => n.Id == propertyTypeId).FirstOrDefault();
+                if (propertyType == null)
+                {
+                    throw new NullReferenceException("Property type of given ID does not exist");
+                }
+
+                var device = context.Devices.Where(n => n.Id == deviceId).FirstOrDefault();
+                if (device == null)
+                {
+                    throw new NullReferenceException("Device of given ID does not exist");
+                }
+
+                property.Device = device;
+                property.PropertyType = propertyType;
+                property.Value = value;
+
+                context.DeviceProperties.Add(property);
                 context.SaveChanges();
             }
         }
@@ -221,13 +255,13 @@ namespace MJIoT_Management
 
         }
 
-        public async void CreateDeviceAsync(string Name, int equipmentTypeId, int userId = 1, List<MJIoT_DBModel.Device> connectedDevices = null)
+        public async void CreateDeviceAsync(string name, int deviceTypeId, int userId = 1, List<MJIoT_DBModel.Device> connectedDevices = null)
         {
             int deviceId;
 
             using (var context = new MJIoTDBContext())
             {
-                var type = context.DeviceTypes.Where(n => n.Id == equipmentTypeId).FirstOrDefault();
+                var type = context.DeviceTypes.Where(n => n.Id == deviceTypeId).FirstOrDefault();
                 if (type == null)
                 {
                     throw new NullReferenceException("Device type of given ID does not exist");
@@ -251,6 +285,13 @@ namespace MJIoT_Management
                 context.SaveChanges();
 
                 deviceId = device.Id;
+
+                //NAME
+                if (name != null)
+                {
+                    var namePropertyId = 1;
+                    CreateDeviceProperty(namePropertyId, deviceId, name);
+                }
             }
 
             var deviceKey = await AddDeviceAsync(deviceId);
