@@ -14,7 +14,9 @@ namespace MJIoT_Management
         {
             var manager = new Manager();
 
-            manager.CreateDeviceAsync("Simulated Switch Nr 2", 3);
+            manager.CreateDeviceWithPropertiesAsync("Test1", 2);
+
+            //manager.CreateDeviceProperty(3, 8, "false");
 
             Console.ReadLine();
         }
@@ -255,7 +257,7 @@ namespace MJIoT_Management
 
         }
 
-        public async void CreateDeviceAsync(string name, int deviceTypeId, int userId = 1, List<MJIoT_DBModel.Device> connectedDevices = null)
+        public async Task<int> CreateDeviceAsync(string name, int deviceTypeId, int userId = 1, List<MJIoT_DBModel.Device> listenerDevices = null)
         {
             int deviceId;
 
@@ -278,7 +280,7 @@ namespace MJIoT_Management
 
                 device.DeviceType = type;
                 device.IoTHubKey = "(new device)";  //temporary value
-                device.ConnectedDevices = connectedDevices;
+                device.ListenerDevices = listenerDevices;
                 device.User = user;
 
                 context.Devices.Add(device);
@@ -289,7 +291,7 @@ namespace MJIoT_Management
                 //NAME
                 if (name != null)
                 {
-                    var namePropertyId = 1;
+                    var namePropertyId = 1; //SHOULD BE FETCHED FROM DB
                     CreateDeviceProperty(namePropertyId, deviceId, name);
                 }
             }
@@ -303,10 +305,53 @@ namespace MJIoT_Management
 
                 context.SaveChanges();
             }
+
+            return deviceId;
+        }
+
+        public async void CreateDeviceWithPropertiesAsync(string name, int deviceTypeId, int userId = 1, List<MJIoT_DBModel.Device> listenerDevices = null)
+        {
+            var deviceId = await CreateDeviceAsync(name, deviceTypeId, userId, listenerDevices);
+            var properties = new List<int>();
+            using (var context = new MJIoTDBContext())
+            {
+                var type = deviceTypeId;
+
+                while (true)
+                {
+                    //get all properties of the type, which a new device is instance of and these that are inherited from base types
+                    properties.AddRange(
+                            context.PropertyTypes.Include("DeviceType")
+                            .Where(n => n.DeviceType.Id == type && n.Name != "DisplayName")
+                            .Select(n => n.Id)
+                            .ToList()
+                        );
+
+                    var typeObject = context.DeviceTypes.Include("BaseDeviceType")
+                        .Where(n => n.Id == type)
+                        .Select(n => n.BaseDeviceType)
+                        .FirstOrDefault();
+
+                    if (typeObject == null)
+                        break;
+
+                    type = typeObject.Id;
+                    //.Select(n => n.BaseDeviceType.Id)
+                    //.FirstOrDefault();
+
+                }
+            }
+            foreach (var property in properties)
+            {
+                CreateDeviceProperty(property, deviceId, "none");  //na razie "none" - generalnie każdy PropertyType powinien mieć jakis default value, który trzebaby pobrać i zapisać do nowje propercji
+            }
+                
         }
 
         public void RemoveDevice(int id)
         {
+            //JESCZE USUWNIE Z IOTHUBA
+
             using (var context = new MJIoTDBContext())
             {
                 var device = context.Devices.Where(n => n.Id == id).FirstOrDefault();
