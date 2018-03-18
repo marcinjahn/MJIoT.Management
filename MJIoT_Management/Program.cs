@@ -14,20 +14,19 @@ namespace MJIoT_Management
         {
             var manager = new Manager();
 
-            manager.CreateDeviceWithPropertiesAsync("Test1", 2);
+            //var deviceType = manager.CreateDeviceType("SimNumSenderNumListener", 1, false, true);
+            //manager.CreatePropertyType(deviceType, "SimSenderProp", PropertyTypeFormats.Float, false, true, false);
+            //manager.CreatePropertyType(deviceType, "SimlistenerProp", PropertyTypeFormats.Float, false, false, true);
+            //manager.CreateDeviceAsync("Simulator3", deviceType, 1).Wait();
 
-            //manager.CreateDeviceProperty(3, 8, "false");
-
-            Console.ReadLine();
+            manager.UpdatePropertyType(9, null, "SimListenerProp");
         }
-
-
     }
 
     public class Manager
     {
 
-        private string _iotHubCS = "HostName=MJIoT-IoTHub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=ieEi5UNBx6C7js/+e6/G+oM3K/isI4WRARv2bBNd270=";
+        private string _iotHubCS = "HostName=MJIoT-Hub.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=SzQKdF1y6bAEgGfZei2bmq1Jd83odc+B2x197n2MtxA=";
         
         public string IotHubCS
         {
@@ -41,7 +40,7 @@ namespace MJIoT_Management
 
 
         //EQUIPMENT TYPE
-        public void CreateDeviceType(string name, int? baseTypeId = null, int? senderPropertyId = null, int? listenerPropertyId = null, bool isAbstract = false)
+        public DeviceType CreateDeviceType(string name, int? baseTypeId = null, bool isAbstract = false, bool offlineMessagesEnabled = true)
         {
             using (var context = new MJIoTDBContext())
             {
@@ -55,35 +54,19 @@ namespace MJIoT_Management
                         throw new NullReferenceException("Device type of given ID does not exist");
                     type.BaseDeviceType = baseType;
                 }
-                if (senderPropertyId != null)
-                {
-                    var senderProperty = context.PropertyTypes.Where(n => n.Id == senderPropertyId).FirstOrDefault();
-                    if (senderProperty == null)
-                        throw new NullReferenceException("Property type of given ID does not exist");
-                    type.SenderProperty = senderProperty;
-                }
-                if (listenerPropertyId != null)
-                {
-                    var listenerProperty = context.PropertyTypes.Where(n => n.Id == listenerPropertyId).FirstOrDefault();
-                    if (listenerProperty == null)
-                        throw new NullReferenceException("Property type of given ID does not exist");
-                    type.ListenerProperty = listenerProperty;
-                }
 
                 type.IsAbstract = isAbstract;
+                type.OfflineMessagesEnabled = offlineMessagesEnabled;
 
                 //SAVE TYPE
                 context.DeviceTypes.Add(type);
                 context.SaveChanges();
+
+                return type;
             }
         }
 
-        async public Task CreateDeviceTypeAsync(string name, int? baseTypeId = null, int? senderPropertyId = null, int? listenerPropertyId = null, bool isAbstract = false)
-        {
-            await Task.Run(() => CreateDeviceType(name, baseTypeId, senderPropertyId , listenerPropertyId, isAbstract));
-        }
-
-        public void UpdateDeviceType(int id, string name, int? baseTypeId = null, int? senderPropertyId = null, int? listenerPropertyId = null, bool isAbstract = false)
+        public DeviceType UpdateDeviceType(int id, string name = null, int? baseTypeId = null, bool isAbstract = false, bool offlineMessagesEnabled = true)
         {
             using (var context = new MJIoTDBContext())
             {
@@ -94,7 +77,9 @@ namespace MJIoT_Management
                     throw new NullReferenceException("Device type of given ID does not exist");
                 }
 
-                type.Name = name;
+                if (name != null)
+                    type.Name = name;
+
                 if (baseTypeId != null)
                 {
                     var baseType = context.DeviceTypes.Where(n => n.Id == baseTypeId).FirstOrDefault();
@@ -102,25 +87,14 @@ namespace MJIoT_Management
                         throw new NullReferenceException("Device type of given ID does not exist");
                     type.BaseDeviceType = baseType;
                 }
-                if (senderPropertyId != null)
-                {
-                    var senderProperty = context.PropertyTypes.Where(n => n.Id == senderPropertyId).FirstOrDefault();
-                    if (senderProperty == null)
-                        throw new NullReferenceException("Property type of given ID does not exist");
-                    type.SenderProperty = senderProperty;
-                }
-                if (listenerPropertyId != null)
-                {
-                    var listenerProperty = context.PropertyTypes.Where(n => n.Id == listenerPropertyId).FirstOrDefault();
-                    if (listenerProperty == null)
-                        throw new NullReferenceException("Property type of given ID does not exist");
-                    type.ListenerProperty = listenerProperty;
-                }
 
-                type.IsAbstract = isAbstract;
+                type.IsAbstract = isAbstract ? true : false;
+                type.OfflineMessagesEnabled = offlineMessagesEnabled ? true : false;
 
                 //SAVE TYPE
                 context.SaveChanges();
+
+                return type;
             }
         }
 
@@ -142,7 +116,17 @@ namespace MJIoT_Management
         }
 
         ////EQUIPMENT PROPERTY
-        public void CreatePropertyType( int deviceTypeId, string propertyName, PropertyTypeFormats propertyType, bool uiConfigurable)
+        public PropertyType CreatePropertyType(DeviceType deviceType, string propertyName, PropertyTypeFormats propertyType, bool uiConfigurable, bool isSenderProperty, bool isListenerProperty)
+        {
+            using (var context = new MJIoTDBContext())
+            {
+                //GET ID OF EQUIPMENT TYPE
+                var deviceTypeId = context.DeviceTypes.Where(n => n.Id == deviceType.Id).FirstOrDefault().Id;
+                return CreatePropertyType(deviceTypeId, propertyName, propertyType, uiConfigurable, isSenderProperty, isListenerProperty);
+            }
+        }
+
+        public PropertyType CreatePropertyType( int deviceTypeId, string propertyName, PropertyTypeFormats propertyType, bool uiConfigurable, bool isSenderProperty, bool isListenerProperty)
         {
             using (var context = new MJIoTDBContext())
             {
@@ -159,16 +143,20 @@ namespace MJIoT_Management
                     DeviceType = type,
                     Name = propertyName,
                     Format = propertyType,
-                    UIConfigurable = uiConfigurable
+                    UIConfigurable = uiConfigurable,
+                    IsListenerProperty = isListenerProperty,
+                    IsSenderProperty = isSenderProperty
                 };
 
                 //SAVE PROEPRTY
                 context.PropertyTypes.Add(property);
                 context.SaveChanges();
+
+                return property;
             }
         }
 
-        public void UpdatePropertyType(int id, int deviceTypeId, string propertyName, PropertyTypeFormats propertyType, bool uiConfigurable)
+        public PropertyType UpdatePropertyType(int id, int? deviceTypeId = null, string propertyName = null, PropertyTypeFormats? propertyType = null, bool? uiConfigurable = null, bool? isSenderProperty = null, bool? isListenerProperty = null)
         {
             using (var context = new MJIoTDBContext())
             {
@@ -178,19 +166,32 @@ namespace MJIoT_Management
                     throw new NullReferenceException("Property type of given ID does not exist");
                 }
 
-                var type = context.DeviceTypes.Where(n => n.Id == deviceTypeId).FirstOrDefault();
-                if (type == null)
+                if (deviceTypeId != null)
                 {
-                    throw new NullReferenceException("Device type of given ID does not exist");
+                    var type = context.DeviceTypes.Where(n => n.Id == deviceTypeId).FirstOrDefault();
+                    if (type == null)
+                    {
+                        throw new NullReferenceException("Device type of given ID does not exist");
+                    }
+
+                    property.DeviceType = type;
                 }
 
-                property.DeviceType = type;
-                property.Name = propertyName;
-                property.Format = propertyType;
-                property.UIConfigurable = uiConfigurable;
+                if (propertyName != null)
+                    property.Name = propertyName;
+                if (propertyType != null)
+                    property.Format = propertyType.Value;
+                if (uiConfigurable != null)
+                    property.UIConfigurable = uiConfigurable.Value;
+                if (isSenderProperty != null)
+                    property.IsSenderProperty = isSenderProperty.Value;
+                if (isListenerProperty != null)
+                    property.IsListenerProperty = isListenerProperty.Value;
 
                 //SAVE PROEPRTY
                 context.SaveChanges();
+
+                return property;
             }
         }
 
@@ -209,6 +210,9 @@ namespace MJIoT_Management
             }
         }
 
+
+        //DEPRECATED
+        [Obsolete("Storing properties in SQL is not a supported solution anymore")]
         public void CreateDeviceProperty(int propertyTypeId, int deviceId, string value)
         {
             var property = new DeviceProperty();
@@ -257,7 +261,16 @@ namespace MJIoT_Management
 
         }
 
-        public async Task<int> CreateDeviceAsync(string name, int deviceTypeId, int userId = 1, List<MJIoT_DBModel.Device> listenerDevices = null)
+        public async Task<int> CreateDeviceAsync(string name, DeviceType deviceType, int userId = 1)
+        {
+            using (var context = new MJIoTDBContext())
+            {
+                var deviceTypeId = context.DeviceTypes.Where(n => n.Id == deviceType.Id).FirstOrDefault().Id;
+                return await CreateDeviceAsync(name, deviceTypeId, userId);
+            }
+        }
+
+        public async Task<int> CreateDeviceAsync(string name, int deviceTypeId, int userId = 1)
         {
             int deviceId;
 
@@ -280,7 +293,6 @@ namespace MJIoT_Management
 
                 device.DeviceType = type;
                 device.IoTHubKey = "(new device)";  //temporary value
-                device.ListenerDevices = listenerDevices;
                 device.User = user;
 
                 context.Devices.Add(device);
@@ -309,9 +321,11 @@ namespace MJIoT_Management
             return deviceId;
         }
 
+        //DEPRECATED
+        [Obsolete("Storing properties in SQL is not a supported solution anymore")]
         public async void CreateDeviceWithPropertiesAsync(string name, int deviceTypeId, int userId = 1, List<MJIoT_DBModel.Device> listenerDevices = null)
         {
-            var deviceId = await CreateDeviceAsync(name, deviceTypeId, userId, listenerDevices);
+            var deviceId = await CreateDeviceAsync(name, deviceTypeId, userId);
             var properties = new List<int>();
             using (var context = new MJIoTDBContext())
             {
