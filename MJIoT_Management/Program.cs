@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+
+using System.Data.Entity;
 using System.Text;
 using System.Threading.Tasks;
 using MJIoT_DBModel;
@@ -19,7 +21,12 @@ namespace MJIoT_Management
             //manager.CreatePropertyType(deviceType, "SimlistenerProp", PropertyTypeFormats.Float, false, false, true);
             //manager.CreateDeviceAsync("Simulator3", deviceType, 1).Wait();
 
-            manager.UpdatePropertyType(9, null, "SimListenerProp");
+            //manager.UpdatePropertyType(9, null, "SimListenerProp");
+
+            manager.CreateConnection("7", "SimulatedSwitchState", "8", "SimulatedLampState", ConnectionConditionTypes.NoCondition, null);
+
+            Console.WriteLine("DONE");
+            Console.ReadLine();
         }
     }
 
@@ -36,6 +43,47 @@ namespace MJIoT_Management
         public Manager()
         {
 
+        }
+
+        //CONNECTIONS BETWEEN DEVICES
+        public void CreateConnection(string senderId, string senderPropertyName, string listenerId, string listenerPropertyName, ConnectionConditionTypes conditionType, string conditionValue)
+        {
+            using (var context = new MJIoTDBContext())
+            {
+                var sender = context.Devices
+                    .Include(n => n.DeviceType)
+                    .Where(n => n.Id.ToString() == senderId)
+                    .FirstOrDefault();
+
+                var listener = context.Devices
+                    .Include(n => n.DeviceType)
+                    .Where(n => n.Id.ToString() == listenerId)
+                    .FirstOrDefault();
+
+                var senderType = sender.DeviceType;
+                var senderProperty = context.PropertyTypes
+                    .Include(n => n.DeviceType)
+                    .Where(n => n.DeviceType.Id == sender.DeviceType.Id && n.Name == senderPropertyName)
+                    .FirstOrDefault();
+
+                var listenerProperty = context.PropertyTypes
+                    .Include(n => n.DeviceType)
+                    .Where(n => n.DeviceType.Id == listener.DeviceType.Id && n.Name == listenerPropertyName)
+                    .FirstOrDefault();
+
+                var connection = new Connection
+                {
+                    SenderDevice = sender,
+                    SenderProperty = senderProperty,
+                    ListenerDevice = listener,
+                    ListenerProperty = listenerProperty,
+                    Condition = conditionType,
+                    ContitionValue = conditionValue
+                };
+
+                context.Connections.Add(connection);
+                context.SaveChanges();
+            }
         }
 
 
