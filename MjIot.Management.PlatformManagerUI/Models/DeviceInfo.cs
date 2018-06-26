@@ -9,6 +9,13 @@ namespace MjIot.Management.PlatformManagerUI.Models
 {
     public class DeviceInfo : BaseInfo
     {
+        private string _name;
+        public string Name
+        {
+            get { return _name; }
+            set { SetProperty(ref _name, value); }
+        }
+
         private Device _device;
         public Device Device
         {

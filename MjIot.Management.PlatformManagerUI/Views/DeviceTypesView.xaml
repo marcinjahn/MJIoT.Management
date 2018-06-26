@@ -23,8 +23,11 @@
         </Grid.RowDefinitions>
 
         <GroupBox Header="Device types exisitng on the platform" Grid.Row="0">
-            <StackPanel>
-                <ScrollViewer>
+            <DockPanel LastChildFill="True">
+                <Button Margin="0,10,0,0" DockPanel.Dock="Bottom"
+                    Command="{Binding DeleteCommand}">Delete selected</Button>
+                
+                <ScrollViewer DockPanel.Dock="Top">
                     <DataGrid SelectionUnit="FullRow" CanUserAddRows="false" 
                     SelectionMode="Single" AutoGenerateColumns="False" 
                     IsReadOnly="False" ItemsSource="{Binding Path=DeviceTypes}" >
@@ -52,10 +55,7 @@
                         </DataGrid.Columns>
                     </DataGrid>
                 </ScrollViewer>
-
-                <Button Margin="0,10,0,0"
-                    Command="{Binding DeleteCommand}">Delete selected</Button>
-            </StackPanel>
+            </DockPanel>
         </GroupBox>
 
         <GroupBox Header="Define the new Device Type" Grid.Row="1">

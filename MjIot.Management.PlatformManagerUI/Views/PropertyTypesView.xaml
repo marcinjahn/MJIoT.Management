@@ -23,12 +23,10 @@
         </Grid.RowDefinitions>
 
         <GroupBox Header="Property types exisitng on the platform" Grid.Row="0">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-                <ScrollViewer Grid.Row="0">
+            <DockPanel LastChildFill="True">
+                <Button Margin="0,10,0,0" DockPanel.Dock="Bottom"
+                    Command="{Binding DeleteCommand}">Delete selected</Button>
+                <ScrollViewer DockPanel.Dock="Top">
                     <DataGrid SelectionUnit="FullRow" CanUserAddRows="false" 
                     SelectionMode="Single" AutoGenerateColumns="False" 
                     IsReadOnly="False" ItemsSource="{Binding Path=PropertyTypes}" >
@@ -58,11 +56,7 @@
                         </DataGrid.Columns>
                     </DataGrid>
                 </ScrollViewer>
-
-                <Button Margin="0,10,0,0" Grid.Row="1"
-                    Command="{Binding DeleteCommand}">Delete selected
-                </Button>
-            </Grid>
+            </DockPanel>
         </GroupBox>
 
         <GroupBox Header="Define the new Property Type" Grid.Row="1">

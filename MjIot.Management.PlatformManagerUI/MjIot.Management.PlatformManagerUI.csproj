@@ -47,9 +47,6 @@
     <Reference Include="MJIoT_ModelStorage">
       <HintPath>..\..\MJIoT_ModelStorage\MJIoT_ModelStorage\bin\Debug\MJIoT_ModelStorage.dll</HintPath>
     </Reference>
-    <Reference Include="MJIoT_PropertyDataStorage">
-      <HintPath>..\..\MJIoT_PropertyDataStorage\MJIoT_PropertyDataStorage\bin\Debug\MJIoT_PropertyDataStorage.dll</HintPath>
-    </Reference>
     <Reference Include="MJMVVM">
       <HintPath>..\..\MJMVVM\MJMVVM\bin\Debug\MJMVVM.dll</HintPath>
     </Reference>
@@ -153,6 +150,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\MJIoT_PropertyDataStorage\MJIoT_PropertyDataStorage\MJIoT_PropertyDataStorage.csproj">
+      <Project>{9940c164-bcd2-4bec-84c4-8e4a212beb90}</Project>
+      <Name>MJIoT_PropertyDataStorage</Name>
+    </ProjectReference>
     <ProjectReference Include="..\MJIoT_Management\MjIot.Management.ManagementLib.csproj">
       <Project>{98579f1c-fd77-4aa9-bf5f-17b829ca19ff}</Project>
       <Name>MjIot.Management.ManagementLib</Name>

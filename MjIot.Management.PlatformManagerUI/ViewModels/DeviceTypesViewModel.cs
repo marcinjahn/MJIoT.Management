@@ -29,9 +29,7 @@ namespace MjIot.Management.PlatformManagerUI.ViewModels
             IsOfflineMessagingEnabled = true;
 
             _unitofWork = unitOfWork;
-
             DeviceTypes = Helper.GetDeviceTypes(_unitofWork);
-
             SelectedDeviceType = DeviceTypes.FirstOrDefault();
         }
 

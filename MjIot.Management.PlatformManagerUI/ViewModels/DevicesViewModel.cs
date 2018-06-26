@@ -1,6 +1,7 @@
 ﻿using MjIot.Management.PlatformManagerUI.Helpers;
 using MjIot.Management.PlatformManagerUI.Models;
 using MJIoT.Storage.Models;
+using MJIoT.Storage.PropertyValues;
 using MJIoT_DBModel;
 using System;
 using System.Collections.Generic;
@@ -16,6 +17,7 @@ namespace MjIot.Management.PlatformManagerUI.ViewModels
     public class DevicesViewModel : MJMVVM.NotificationBase
     {
         UnitOfWork _unitofWork;
+        IPropertyValuesStorage propertiesStorage;
 
         public DevicesViewModel(UnitOfWork unitOfWork)
         {
@@ -25,20 +27,45 @@ namespace MjIot.Management.PlatformManagerUI.ViewModels
             DeleteCommand = new MJMVVM.DelegateCommand(OnDelete, CanDelete);
             CreateCommand = new MJMVVM.DelegateCommand(OnCreate, CanCreate);
 
-            DisplayName = "Device Types";
-            IsOfflineMessagingEnabled = true;
+            DisplayName = "Devices";
 
             _unitofWork = unitOfWork;
+            propertiesStorage = new DocumentDbRepository();
 
-            Devices = Helper.GetDevices(_unitofWork);
-            DeviceTypes = Helper.GetDeviceTypes(_unitofWork);
+            SetUpDevices();
+
+            DeviceTypes = new ObservableCollection<DeviceType>(
+                Helper.GetDeviceTypes(_unitofWork)
+                    .Select(n => n.Type)
+                    .Where(n => !n.IsAbstract)
+                    .ToList());
 
             SelectedDeviceType = DeviceTypes.FirstOrDefault();
+
+            UserId = 1;
         }
 
         public DevicesViewModel()
         //: this(new UnitOfWork())
         {
+        }
+
+        private void SetDevicesNames()
+        {
+            foreach (var device in Devices)
+            {
+                device.Name = propertiesStorage.GetPropertyValue(device.Device.Id, "Name");
+            }
+
+
+            //var tasks = new List<Task>();
+            //foreach (var device in Devices)
+            //{
+            //    tasks.Add(Task.Run(async () => device.Name = await propertiesStorage.GetPropertyValueAsync(device.Device.Id, "Name")));
+            //}
+
+            //await Task.WhenAll(tasks.ToArray());
+
         }
 
         #region COMMANDS
@@ -53,48 +80,53 @@ namespace MjIot.Management.PlatformManagerUI.ViewModels
         void OnSelectAll(object select)
         {
             var choice = (bool)select == true;
-            foreach (var type in DeviceTypes)
+            foreach (var type in Devices)
                 type.IsSelected = choice;
         }
 
         void OnDelete(object arg)
         {
-            List<DeviceType> typesToRemove = new List<DeviceType>();
-            foreach (var type in DeviceTypes)
+            List<Device> devicesToRemove = new List<Device>();
+            foreach (var device in Devices)
             {
-                if (type.IsSelected)
-                    typesToRemove.Add(type.Type);
+                if (device.IsSelected)
+                    devicesToRemove.Add(device.Device);
             }
-            _unitofWork.DeviceTypes.RemoveRange(typesToRemove);
+            _unitofWork.Devices.RemoveRange(devicesToRemove);
             _unitofWork.Save();
 
-            DeviceTypes = Helper.GetDeviceTypes(_unitofWork);
+            SetUpDevices();
         }
 
         private bool CanDelete(object arg)
         {
-            foreach (var type in DeviceTypes)
+            foreach (var device in Devices)
             {
-                if (type.IsSelected)
+                if (device.IsSelected)
                     return true;
             }
 
             return false;
         }
 
-        void OnCreate(object arg)
+        async void OnCreate(object arg)
         {
-            var newDeviceType = new DeviceType
+            var newDevice = new Device
             {
-                BaseDeviceType = SelectedDeviceType.Type,
-                Name = NewName,
-                IsAbstract = IsAbstract,
-                OfflineMessagesEnabled = IsOfflineMessagingEnabled
+                DeviceType = SelectedDeviceType,
+                User = _unitofWork.Users.Get(UserId)
             };
-            _unitofWork.DeviceTypes.Add(newDeviceType);
+            _unitofWork.Devices.Add(newDevice);
             _unitofWork.Save();
+            await propertiesStorage.SetPropertyValueAsync(newDevice.Id, "Name", NewName);
 
-            DeviceTypes = Helper.GetDeviceTypes(_unitofWork);
+            SetUpDevices();
+        }
+
+        private void SetUpDevices()
+        {
+            Devices = Helper.GetDevices(_unitofWork);
+            Task.Run(() => SetDevicesNames());
         }
 
         private bool CanCreate(object arg)
@@ -114,32 +146,25 @@ namespace MjIot.Management.PlatformManagerUI.ViewModels
             set { SetProperty(ref _devices, value); }
         }
 
-        private ObservableCollection<DeviceTypeInfo> _deviceTypes;
-        public ObservableCollection<DeviceTypeInfo> DeviceTypes
+        private ObservableCollection<DeviceType> _deviceTypes;
+        public ObservableCollection<DeviceType> DeviceTypes
         {
             get { return _deviceTypes; }
             set { SetProperty(ref _deviceTypes, value); }
         }
 
-        private DeviceTypeInfo _selectedDeviceType;
-        public DeviceTypeInfo SelectedDeviceType
+        private DeviceType _selectedDeviceType;
+        public DeviceType SelectedDeviceType
         {
             get { return _selectedDeviceType; }
             set { SetProperty(ref _selectedDeviceType, value); }
         }
 
-        private bool _isAbstract;
-        public bool IsAbstract
+        private int _userId;
+        public int UserId
         {
-            get { return _isAbstract; }
-            set { SetProperty(ref _isAbstract, value); }
-        }
-
-        private bool _isOfflineMessagingEnabled;
-        public bool IsOfflineMessagingEnabled
-        {
-            get { return _isOfflineMessagingEnabled; }
-            set { SetProperty(ref _isOfflineMessagingEnabled, value); }
+            get { return _userId; }
+            set { SetProperty(ref _userId, value); }
         }
 
         private string _newName;
