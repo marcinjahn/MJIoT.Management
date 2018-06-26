@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27004.2005
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MJIoT_Management", "MJIoT_Management\MJIoT_Management.csproj", "{98579F1C-FD77-4AA9-BF5F-17B829CA19FF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MjIot.Management.ManagementLib", "MJIoT_Management\MjIot.Management.ManagementLib.csproj", "{98579F1C-FD77-4AA9-BF5F-17B829CA19FF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MjIot.Management.PlatformManagerUI", "MjIot.Management.PlatformManagerUI\MjIot.Management.PlatformManagerUI.csproj", "{DD7A424E-BA81-41BA-917F-FD798232D8BC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{98579F1C-FD77-4AA9-BF5F-17B829CA19FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{98579F1C-FD77-4AA9-BF5F-17B829CA19FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{98579F1C-FD77-4AA9-BF5F-17B829CA19FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD7A424E-BA81-41BA-917F-FD798232D8BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD7A424E-BA81-41BA-917F-FD798232D8BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD7A424E-BA81-41BA-917F-FD798232D8BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD7A424E-BA81-41BA-917F-FD798232D8BC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
