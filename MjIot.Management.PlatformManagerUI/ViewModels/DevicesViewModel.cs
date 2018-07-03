@@ -1,7 +1,7 @@
 ﻿using MjIot.Management.PlatformManagerUI.Helpers;
 using MjIot.Management.PlatformManagerUI.Models;
+using MJIot.Storage.Properties;
 using MJIoT.Storage.Models;
-using MJIoT.Storage.PropertyValues;
 using MJIoT_DBModel;
 using System;
 using System.Collections.Generic;
@@ -17,7 +17,7 @@ namespace MjIot.Management.PlatformManagerUI.ViewModels
     public class DevicesViewModel : MJMVVM.NotificationBase
     {
         UnitOfWork _unitofWork;
-        IPropertyValuesStorage propertiesStorage;
+        IPropertyStorage propertiesStorage;
 
         public DevicesViewModel(UnitOfWork unitOfWork)
         {
@@ -30,7 +30,7 @@ namespace MjIot.Management.PlatformManagerUI.ViewModels
             DisplayName = "Devices";
 
             _unitofWork = unitOfWork;
-            propertiesStorage = new DocumentDbRepository();
+            propertiesStorage = new CosmosPropertyStorage();
 
             SetUpDevices();
 

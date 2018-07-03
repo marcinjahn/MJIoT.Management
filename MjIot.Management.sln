@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MjIot.Management.Management
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MjIot.Management.PlatformManagerUI", "MjIot.Management.PlatformManagerUI\MjIot.Management.PlatformManagerUI.csproj", "{DD7A424E-BA81-41BA-917F-FD798232D8BC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MJIoT_PropertyDataStorage", "..\MJIoT_PropertyDataStorage\MJIoT_PropertyDataStorage\MJIoT_PropertyDataStorage.csproj", "{9940C164-BCD2-4BEC-84C4-8E4A212BEB90}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MjIot.Storage.Properties", "..\MjIot\MJIoT_PropertyDataStorage\MjIot.Storage.Properties.csproj", "{9940C164-BCD2-4BEC-84C4-8E4A212BEB90}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
